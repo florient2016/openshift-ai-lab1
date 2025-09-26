@@ -102,6 +102,7 @@ spec:
       labels:
         app: minio
     spec:
+      serviceAccountName: minio-sa
       volumes:
         - name: data
           persistentVolumeClaim:
