@@ -24,9 +24,9 @@ def train_retail_model(
     max_depth: int,
     joblib_out: dsl.OutputPath("Model")
 ):
-    \"\"\"Train a simple RandomForestRegressor on a synthetic retail-like dataset
+    """Train a simple RandomForestRegressor on a synthetic retail-like dataset
     and save as joblib for downstream steps. In real life, replace with your data prep.
-    \"\"\"
+    """
     import numpy as np, pandas as pd
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.model_selection import train_test_split
@@ -179,7 +179,7 @@ def deploy_ovms_and_test(
     n_features: int,
     isvc_url_out: dsl.OutputPath(str) = "isvc_url.txt",
 ):
-    \"\"\"Create Secret, ServiceAccount, and InferenceService for OVMS. Wait Ready and test inference.\"\"\"
+    """Create Secret, ServiceAccount, and InferenceService for OVMS. Wait Ready and test inference."""
     import time, json, requests
     from kubernetes import client, config
     from pathlib import Path
