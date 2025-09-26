@@ -1,15 +1,11 @@
 ---
-# MinIO Secret for credentials
-apiVersion: v1
-kind: Secret
-metadata:
-  name: minio-credentials
-  labels:
-    app: minio
-type: Opaque
-data:
-  root-user: YWRtaW4K  # base64 encoded "minioadmin" bWluaW9hZG1pbg==
-  root-password: TWluaW9AMjAxNgo=  # base64 encoded "minioadmin"
+# MinIO Namespace (commented out as per your request)
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: minio
+#   labels:
+#     name: minio
 
 ---
 # MinIO PersistentVolumeClaim
@@ -120,15 +116,9 @@ spec:
             - mkdir -p /data/models && minio server /data --console-address ":9001"
           env:
             - name: MINIO_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: minio-credentials
-                  key: root-user
+              value: "minioadmin"  # Change this in production
             - name: MINIO_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: minio-credentials
-                  key: root-password
+              value: "minioadmin"  # Change this in production
           ports:
             - containerPort: 9000
             - containerPort: 9001
@@ -154,3 +144,45 @@ spec:
               port: 9000
             initialDelaySeconds: 5
             periodSeconds: 5
+
+---
+# MinIO Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: minio-sa
+  labels:
+    app: minio
+
+---
+# MinIO Role for accessing the bucket
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: minio-role
+  labels:
+    app: minio
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+
+---
+# MinIO Role Binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: minio-role-binding
+  labels:
+    app: minio
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: minio-role
+subjects:
+  - kind: ServiceAccount
+    name: minio-sa
+    namespace: <CHANGE_ME> # Adjust if you're using a different namespace
