@@ -75,14 +75,14 @@ def train_retail_model(
     packages_to_install=["minio==7.2.7"]
 )
 def upload_joblib_to_minio(
-    joblib_in: dsl.InputPath("Model"),
+    joblib_in: dsl.InputPath("Model"), # pyright: ignore[reportInvalidTypeForm]
     minio_endpoint: str,
     minio_access_key: str,
     minio_secret_key: str,
     minio_bucket: str,
     s3_prefix: str,
     minio_secure: bool = False,
-    uploaded_uri_out: dsl.OutputPath(str) = "uploaded_uri.txt",
+    uploaded_uri_out: dsl.OutputPath(str) = "uploaded_uri.txt", # type: ignore
 ):
     from minio import Minio
     from pathlib import Path
@@ -140,7 +140,8 @@ def upload_onnx_to_minio(
     minio_bucket: str,
     s3_prefix: str,
     minio_secure: bool = False,
-    ovms_root_out: dsl.OutputPath(str) = "ovms_root.txt"
+    #ovms_root_out: dsl.OutputPath(str) = "ovms_root.txt"
+    ovms_root_out: dsl.OutputPath() = "ovms_root.txt"
 ):
     from minio import Minio
     from pathlib import Path
@@ -167,11 +168,13 @@ def upload_onnx_to_minio(
 
 @dsl.component(
     base_image="python:3.11-slim",
-    packages_to_install=["kubernetes==28.1.0", "requests==2.31.0", "pyyaml==6.0.1"]
+    packages_to_install=["kubernetes==28.1.0", "requests==2.31.0", "pyyaml==6.0.1", "kfp[kubernetes]==2.9.0" ]
 )
 def deploy_ovms_and_test(
     model_name: str,
-    ovms_model_root_s3: dsl.InputPath(str),
+    ovms_model_root_s3: dsl.InputPath(), # type: ignore
+    #ovms_model_root_s3: dsl.InputPath(str), 
+    #ovms_model_root_s3: str, # type: ignore
     minio_endpoint: str,
     minio_access_key: str,
     minio_secret_key: str,
@@ -180,12 +183,16 @@ def deploy_ovms_and_test(
     isvc_url_out: dsl.OutputPath(str) = "isvc_url.txt",
 ):
     """Create Secret, ServiceAccount, and InferenceService for OVMS. Wait Ready and test inference."""
-    import time, json, requests
+    import time, json, requests, os
     from kubernetes import client, config
     from pathlib import Path
 
     endpoint_url = ("https://" if minio_secure else "http://") + minio_endpoint
-    model_root = Path(ovms_model_root_s3).read_text().strip()
+    #model_root = Path(ovms_model_root_s3).read_text().strip()
+    if os.path.exists(ovms_model_root_s3):
+        model_root = Path(ovms_model_root_s3).read_text().strip()
+    else:
+        model_root = ovms_model_root_s3
 
     # Load kube config (in-cluster or local)
     try:
@@ -344,10 +351,10 @@ def retail_ovms_pipeline(
     max_depth: int = 12,
 
     # MinIO params
-    minio_endpoint: str = "minio:9000",
-    minio_access_key: str = "minioadmin",
-    minio_secret_key: str = "minioadmin123",
-    minio_bucket: str = "models",
+    minio_endpoint: str = "minio-api-florient2016-dev.apps.rm2.thpm.p1.openshiftapps.com",
+    minio_access_key: str = "admin",
+    minio_secret_key: str = "Minio@2016",
+    minio_bucket: str = "artifacts",
     s3_prefix: str = "retail",
     minio_secure: bool = False,
 
