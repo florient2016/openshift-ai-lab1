@@ -22,12 +22,12 @@ from kfp import compiler
 def train_retail_model(
     n_estimators: int,
     max_depth: int,
-    joblib_out: dsl.OutputPath("Model")
+    joblib_out: dsl.OutputPath("Model") # type: ignore
 ):
     """Train a simple RandomForestRegressor on a synthetic retail-like dataset
     and save as joblib for downstream steps. In real life, replace with your data prep.
     """
-    import numpy as np, pandas as pd
+    import numpy as np, pandas as pd # pyright: ignore[reportMissingModuleSource]
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import mean_absolute_error
@@ -104,13 +104,13 @@ def upload_joblib_to_minio(
     packages_to_install=["scikit-learn==1.4.2", "joblib==1.3.2", "skl2onnx==1.16.0", "onnx==1.16.0"]
 )
 def convert_joblib_to_onnx(
-    joblib_in: dsl.InputPath("Model"),
+    joblib_in: dsl.InputPath("Model"), # type: ignore
     feature_count: int,
-    onnx_dir_out: dsl.OutputPath("Directory")
+    onnx_dir_out: dsl.OutputPath("Directory") # type: ignore
 ):
     import joblib, os
-    from skl2onnx import convert_sklearn
-    from skl2onnx.common.data_types import FloatTensorType
+    from skl2onnx import convert_sklearn # type: ignore
+    from skl2onnx.common.data_types import FloatTensorType # type: ignore
     from pathlib import Path
 
     loaded = joblib.load(joblib_in)
@@ -133,7 +133,7 @@ def convert_joblib_to_onnx(
     packages_to_install=["minio==7.2.7"]
 )
 def upload_onnx_to_minio(
-    onnx_dir_in: dsl.InputPath("Directory"),
+    onnx_dir_in: dsl.InputPath("Directory"), # type: ignore
     minio_endpoint: str,
     minio_access_key: str,
     minio_secret_key: str,
@@ -141,7 +141,7 @@ def upload_onnx_to_minio(
     s3_prefix: str,
     minio_secure: bool = False,
     #ovms_root_out: dsl.OutputPath(str) = "ovms_root.txt"
-    ovms_root_out: dsl.OutputPath() = "ovms_root.txt"
+    ovms_root_out: dsl.OutputPath() = "ovms_root.txt" # type: ignore
 ):
     from minio import Minio
     from pathlib import Path
@@ -180,7 +180,7 @@ def deploy_ovms_and_test(
     minio_secret_key: str,
     minio_secure: bool,
     n_features: int,
-    isvc_url_out: dsl.OutputPath(str) = "isvc_url.txt",
+    isvc_url_out: dsl.OutputPath(str) = "isvc_url.txt", # type: ignore
 ):
     """Create Secret, ServiceAccount, and InferenceService for OVMS. Wait Ready and test inference."""
     import time, json, requests, os
@@ -351,9 +351,9 @@ def retail_ovms_pipeline(
     max_depth: int = 12,
 
     # MinIO params
-    minio_endpoint: str = "minio-api-florient2016-dev.apps.rm2.thpm.p1.openshiftapps.com",
-    minio_access_key: str = "admin",
-    minio_secret_key: str = "Minio@2016",
+    minio_endpoint: str = "<CHANGE_ME>",
+    minio_access_key: str = "<CHANGE_ME>",
+    minio_secret_key: str = "<CHANGE_ME>",
     minio_bucket: str = "artifacts",
     s3_prefix: str = "retail",
     minio_secure: bool = False,
